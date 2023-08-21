@@ -1,0 +1,76 @@
+#####Kubernetes cluster:
+
+1) Launch 3 ec2 instances (1 master, 2 workers)
+2) Execute the following commands in all three instances
+  
+sudo su
+apt update -y
+apt install docker.io -y
+systemctl start docker
+systemctl enable docker
+
+curl -fsSL "https://packages.cloud.google.com/apt/doc/apt-key.gpg" | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/kubernetes-archive-keyring.gpg
+echo 'deb https://packages.cloud.google.com/apt kubernetes-xenial main' > /etc/apt/sources.list.d/kubernetes.list
+
+apt update -y
+apt install kubeadm=1.20.0-00 kubectl=1.20.0-00 kubelet=1.20.0-00 -y
+
+3) Execute these commands in master node
+
+sudo su
+kubeadm init
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+
+kubeadm token create --print-join-command
+
+4) Execute the following on worker nodes
+
+sudo su
+kubeadm reset pre-flight checks
+( paste the join command u got on master node while doing init here so that u can create a cluster)
+
+5) In master node,
+ kubectl get nodes (To check if the worker nodes are connected to master node)
+
+###### Argo CD configuration:
+
+1) (In master node)
+   kubectl create namespace argocd (creating dedicated namespace for argocd)
+   kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml (installing argocd)
+  
+   kubectl get pods -n argocd -w (lists the pods that are installed inside that argocd namespace)
+   kubectl get svc -n argocd
+   kubectl edit svc argocd-server -n argocd 
+   (We should edit the service file as nodeport so that we can access the argocd UI from our browser)
+   (Give the public IP along with nodeport provided to access Argocd UI)
+   kubectl get svc -n argocd
+2) You will see the UI, give 
+     username : admin
+     password: Go to master node and give this command 
+               kubectl edit secret argocd-initial-admin-secret -n argocd (the password will be in base64 format, decode it using
+               echo (password value in base 64) | base64 --decode
+     (enter that password in UI and login)
+3) In Argocd UI , click -> Create application
+                           Give any name for your application
+                           Give any name for your project or default
+                           Give your Github Repository url
+                           Give the path of your source files(folder in which the source files are located)
+                           Give any name for your namespace or default
+                           Give the url of your cluster (for current cluster select the url popup)
+                           Click on create
+                          (Argocd will refer the github repository and deploy the application in the cluster)
+(We can access the application through out browser by specifying service type as nodeport in app's service.yml file)
+
+4) In master node, try 
+     kubectl get services
+     kubectl get deploy (to see ur deployments and services)                           
+   
+   
+
+
+    
