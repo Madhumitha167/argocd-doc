@@ -58,10 +58,10 @@ kubeadm reset pre-flight checks
 3) In Argocd UI , click -> Create application
                            Give any name for your application
                            Give any name for your project or default
-                           Give your Github Repository url
+                           Give your Github Repository url that contains deployment.yml file ( if u dont have one, u can use any app from https://github.com/argoproj/argocd-example-apps.git)
                            Give the path of your source files(folder in which the source files are located)
                            Give any name for your namespace or default
-                           Give the url of your cluster (for current cluster select the url popup)
+                           Give the url of your cluster (for current cluster select the url that pops up)
                            Click on create
                           (Argocd will refer the github repository and deploy the application in the cluster)
 (We can access the application through out browser by specifying service type as nodeport in app's service.yml file)
